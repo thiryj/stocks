@@ -1,6 +1,7 @@
 #Written by John Thiry - 2016
 
 #other imports
+import os
 import csv
 from collections import OrderedDict as OD
 import collections
@@ -268,8 +269,8 @@ def	dayStudy(df_,goalOpen=GOAL_OPEN, goalLH=GOAL_LH):
 	#dfStudy_['prev_day_result']=np.where(???
 	return dfStudy_
 	
-def	minuteStudy(ticker,endDay=0,startDay=0):
-	pdb.set_trace()
+def daysByMinutes(ticker,endDay=0,startDay=0):
+#	pdb.set_trace()
 	dfm_=ud.fetchMI(ticker)
 	dfms_=scale_(dfm_)
 	dfmsc_=dfms_['close']
@@ -281,6 +282,12 @@ def	minuteStudy(ticker,endDay=0,startDay=0):
 		dfWork=dfmsc_
 	return dfWork.unstack(0)
 	
+def minutesByDay(ticker):
+	dfm=ud.fetchMI(ticker)
+	dfms=scale_(dfm)
+	dfmsu=dfms.unstack()
+	return dfmsu.loc[:,['close']]['close']
+
 def stats(df_,goalOpen=GOAL_OPEN, goalLH=GOAL_LH):
 	dfStudy_=dayStudy(df_,goalOpen, goalLH)
 	stats_day=pd.DataFrame()
@@ -626,18 +633,18 @@ def	fileName(ticker,type, overwrite=False):
 	return strTime + type + '.csv'
 
 def filePath(ticker):
-	return constants.SAVE_PATH_LOCAL + ticker + '\\'
+	return os.path.join(os.getcwd(),ticker)+ os.sep 
 	
 def filePathRemote(ticker):
-	return constants.SAVE_PATH_REMOTE + ticker + '\\'
+	return constants.SAVE_PATH_REMOTE + ticker + os.sep
 
 def save_(df_, ticker, type, overwrite=False):
 	#fileName = datetime.now().strftime('%Y-%m-%d-%H-%M-')+ str('result.csv')
 	if overwrite:
-		savePathName = filePath(ticker) + str(fileName(ticker,type,overwrite=True))
+		savePathName = os.path.join(filePath(ticker), (fileName(ticker,type,overwrite=True)))
 		df_.to_csv(savePathName)
 	else:
-		savePathName = filePath(ticker) + str(fileName(ticker,type))
+		savePathName = os.path.join(filePath(ticker), (fileName(ticker,type)))
 		df_.to_csv(savePathName)	
 		if type=='master':
 			copyfile(savePathName,filePath(ticker)+'master.csv')
@@ -716,10 +723,3 @@ def save_(df_, ticker, type, overwrite=False):
 #7.  unstack it by date on column: dfmsc3u=dfmsc3.unstack(0)
 #8.  plot:  dfmsc3u.plot()
 #9. show plot.  plt.show()
-def	minuteStudy(ticker,endDay,startDay=0):
-	dfm_=ud.fetchMI(ticker)
-	dfms_=scale_(dfm_)
-	dfmscu_=dfms_['close'].unstack(1)
-	dfmscuN=dfmscu_.iloc[startDay:endDay]
-	return dfmscuN.stack().unstack(0)
-	
