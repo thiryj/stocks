@@ -174,12 +174,14 @@ def dupsNum(df_):
 	return dupCounter
 
 def scaleNum(standard,observable):
-	return (1 + float(observable-standard)/standard)
+	#scale observable to a standard.  zero difference return 0.  
+	#example:  scanleNum(5,6) returns 0.2.  in other words, 6 is 20% bigger than 5
+	return (float(observable-standard)/standard)-1
 
 def scale_(df_):#  takes a dfu mulitindex
 	#scale each day data to %change from opening value
-	#for instance if the time n quote is 23 and the opening was 22, then return 1+(23-22)/22=1.0454
-	#21 would transform to 1+ (21-22)/22 = 0.9545
+	#for instance if the time n quote is 23 and the opening was 22, then return (23-22)/22=.0454
+	#21 would transform to (21-22)/22 -1 = 0.9545
 	#df_['closeScaled'] = (df_.close.div(df_.groupby(level=0)['open'].transform('first'))-1)*100
 	dfg_ = df_.groupby(level=0)['open'].transform('first')
 	dfs_ = pd.DataFrame()
@@ -282,11 +284,17 @@ def daysByMinutes(ticker,endDay=0,startDay=0):
 		dfWork=dfmsc_
 	return dfWork.unstack(0)
 	
-def minutesByDay(ticker):
+def minutesByDayScale(ticker):
 	dfm=ud.fetchMI(ticker)
 	dfms=scale_(dfm)
 	dfmsu=dfms.unstack()
 	return dfmsu.loc[:,['close']]['close']
+
+
+def minutesByDay(ticker):
+	dfm=ud.fetchMI(ticker)
+	dfmu=dfm.unstack()
+	return dfmu.loc[:,['close']]['close']
 
 def stats(df_,goalOpen=GOAL_OPEN, goalLH=GOAL_LH):
 	dfStudy_=dayStudy(df_,goalOpen, goalLH)
@@ -723,3 +731,9 @@ def save_(df_, ticker, type, overwrite=False):
 #7.  unstack it by date on column: dfmsc3u=dfmsc3.unstack(0)
 #8.  plot:  dfmsc3u.plot()
 #9. show plot.  plt.show()
+
+# Observations about days of week:
+# for strat of 1% harvest from open: best trade day is Friday.  25% of the good days are Friday
+# worst day is Monday by far.  45% of the bad days are monday
+# stop loss should be around -1.64%.  if less than that, then lose to many good days.  
+# ave loss open to low on bad days is -3.66%
